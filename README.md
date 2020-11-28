@@ -1,3 +1,3 @@
 # Doodle-Jump
-CSCB58 Final Project  
+Final project for CSCB58: Computer Organization  
 Recreated version of the Doodle Jump mobile game in MIPS Assembly.
