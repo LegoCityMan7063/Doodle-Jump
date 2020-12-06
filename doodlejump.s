@@ -36,7 +36,7 @@
 	arraySize: .word 4096 # bitmap display array size
 	platformLength: .word 28 # length of a platform
 	maxJumpHeight: .word 15 # maximum height of a single jump
-	newPlatformsRow: .word 0x10008800 # row which triggers platform change on contact
+	newPlatformsRow: .word 0x10008480 # row which triggers platform change on contact
 	
 	platform1Row: .word 0x10008600# platform 1 starts on row 12
 	platform2Row: .word 0x10008B00 # platform 2 starts on row 22
@@ -66,8 +66,8 @@ main:
 		jal checkCollisions
 		jal changePlatforms
 						
-		li $v0, 32 # sleep for 200 ms
-		li $a0, 200
+		li $v0, 32 # sleep for 100 ms
+		li $a0, 100
 		syscall
 		
 		j mainLoop # jump back to start of main loop
@@ -86,7 +86,10 @@ changePlatforms:
 	changePlatformsIf:
 		ble $t0, $t1, changePlatformsElse # if player (body) is high enough, change platforms
 	changePlatformsThen:
-		j changePlatformsDone # don't change platforms
+		jal drawPlatform1NoRandom # redraw platform 1 (in case of doodler collision)
+		jal drawPlatform2NoRandom # redraw platform 1 (in case of doodler collision)
+		jal drawPlatform3NoRandom # redraw platform 1 (in case of doodler collision)
+		j changePlatformsDone 
 	changePlatformsElse:
 
 		
@@ -100,9 +103,9 @@ changePlatforms:
 			li $t5, 0x10008F80 # $t5 stores the first unit box of the last row
 			bge $s1, $t5, platform1NewElse # if platform 1 currently on last row make new one, else shift it down by one row
 		platform1NewThen:
-			addi $t2, $t2, 128 # shift platform 1 row down by one row
+			addi $t2, $t2, 128 # shift platform 1 row down by one row, $t2 stores first element of row
 			sw $t2, platform1Row # update platform1Row
-			addi $s1, $s1, 128 # shift platform 1 row down by one row\
+			addi $s1, $s1, 128 # shift platform 1 row down by one row, $s1 stores first element of platform
 			
 			jal drawPlatform1NoRandom
 			
@@ -130,7 +133,7 @@ changePlatforms:
 		platform2NewThen:
 			addi $t3, $t3, 128 # shift platform 2 row down by one row
 			sw $t3, platform2Row # update platform2Row
-			addi $s2, $s2, 128 # shift platform 1 row down by one row\
+			addi $s2, $s2, 128 # shift platform 2 row down by one row
 			
 			jal drawPlatform2NoRandom	
 					
@@ -158,7 +161,7 @@ changePlatforms:
 		platform3NewThen:
 			addi $t4, $t4, 128 # shift platform 3 row down by one row
 			sw $t4, platform3Row # update platform1Row
-			addi $s3, $s3, 128 # shift platform 1 row down by one row\
+			addi $s3, $s3, 128 # shift platform 3 row down by one row
 			
 			jal drawPlatform3NoRandom
 			
@@ -280,10 +283,19 @@ undrawPlatform:
 	
 	jr $t6 # jump back to changePlatforms
 
-# jump up if enough "energy", otherwise fall down
+# jump up if enough "energy", otherwise fall down; always fall down if too high
 jumpUp:
 	addi $sp, $sp, -4 # increase stack size
 	sw $ra, 0($sp) # push return address of jumpUp into the stack
+	
+	# force doodler to fall down if it will jump higher than (out of) the screen
+	forceFallDownIf:
+		ble $s0, 0x10008100, forceFallDownElse 
+	forceFallDownThen:
+		j forceFallDownDone
+	forceFallDownElse:
+		li $s4, 50
+	forceFallDownDone:
 	
 	jumpUpIf:
 		lw $t1, maxJumpHeight # t1 stores the maximum jump height
@@ -344,8 +356,17 @@ checkCollisions:
 		jal jumpUp # jump up or fall down depending on energy
 		j startJumpingUpDone
 	startJumpingUpElse:
-		li $s4, 0 # reset jump counter i.e. player energy
-		jal jumpUp # player jumps up
+		# don't reset player energy if player just came from below block
+		startJumpingUp2If:
+			lw $t3, maxJumpHeight
+			bge $s4, $t3, startJumpingUp2Else
+		startJumpingUp2Then:
+			jal jumpUp # player jumps up	
+			j startJumpingUp2Done 
+		startJumpingUp2Else:
+			li $s4, 0 # reset jump counter i.e. player energy
+			jal jumpUp # player jumps up
+		startJumpingUp2Done:
 	startJumpingUpDone:
 		
 	lw $t0, 0($sp) # pop return address of checkCollisions from stack and store it in $t0
@@ -389,7 +410,7 @@ keyboardInput:
 			j characterIsJDone
 		characterIsJElse:
 			jal undrawPlayer
-			addi $s0, $s0, -4 
+			addi $s0, $s0, -8
 			j keyboardInputDone
 		characterIsJDone:
 		
@@ -399,7 +420,7 @@ keyboardInput:
 			j characterIsKDone
 		characterIsKElse:
 			jal undrawPlayer
-			addi $s0, $s0, 4
+			addi $s0, $s0, 8
 			j keyboardInputDone
 		characterIsKDone:
 		
@@ -416,7 +437,7 @@ drawPlayer:
 	
 	lw $t0, black # $t1 stores the black colour
 	sw $t0, 0($s0) # color the player character black (body)
-	move $t1, $s0 # color the player character black (head)
+	move $t1, $s0 # color the player character black (head) 
 	addi $t1, $t1, -128
 	sw $t0, 0($t1) 
 	
