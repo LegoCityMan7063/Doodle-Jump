@@ -1793,6 +1793,7 @@ keyboardInput:
 	sw $ra, 0($sp) # push return address of drawPlayer into stack
 	
 	lw $t0, 0xffff0000  # load keystroke event value
+
 	
 	keyboardInputIf:
 		beq $t0, 1, keyboardInputElse # process input
@@ -1801,8 +1802,40 @@ keyboardInput:
 	keyboardInputElse:
 		lw $t1, 0xffff0004 # store ASCII value of key pressed
 		
+		characterIsPIf:
+			 beq $t1, 0x070, characterIsPElse # check if p is present
+		characterIsPThen:
+			j characterIsPDone
+		characterIsPElse:
+			# pause game until p is pressed again
+			sw $zero, 0xffff0004
+			pauseLoopInit:
+			pauseLoop:				
+				addi $sp, $sp, -4 # increase stack size
+				li $t1, 0x100087B8 # $t1 stores the top left pixel of the letter
+				sw $t1, 0($sp) # push top left pixel
+				addi $sp, $sp, -4 # increase stack size
+				lw $t0, black # $t0 stores black
+				sw $t0, 0($sp) # push colour into stack
+				jal drawP						
+					
+				lw $t1, 0xffff0004
+				bne $t1, 0x070, pauseLoop # press p to unpause
+			pauseLoopDone:
+				addi $sp, $sp, -4 # increase stack size
+				li $t1, 0x100087B8 # $t1 stores the top left pixel of the letter
+				sw $t1, 0($sp) # push top left pixel
+				addi $sp, $sp, -4 # increase stack size
+				lw $t0, white # $t0 stores white
+				sw $t0, 0($sp) # push colour into stack
+				jal drawP
+					
+			sw $zero, 0xffff0004
+			j keyboardInputDone
+		characterIsPDone:
+		
 		characterIsJIf: 
-			beq, $t1, 0x06A, characterIsJElse # check if j is pressed
+			beq $t1, 0x06A, characterIsJElse # check if j is pressed
 		characterIsJThen:
 			j characterIsJDone
 		characterIsJElse:
