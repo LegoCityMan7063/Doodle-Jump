@@ -60,7 +60,8 @@
 	greyLevel6: .word 0x5B5B5B # grey
 	greyLevel7: .word 0x343434 # grey
 	greyLevel8: .word 0x282828 # grey
-	orange: .word 0xF3A72B# orange
+	orange: .word 0xF3A72B # orange
+	red: .word 0xEE2020 # red
 .text
 
 main:
@@ -93,14 +94,50 @@ main:
 		
 		j mainLoop # jump back to start of main loop
 	mainLoopDone:
-		sw $zero, score # reset score to zero
-		li $v0, 10 # exit program
-		syscall 
+		jal gameOver
+
+gameOver:
+	lw $t0, red # $t0 stores the colour red
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t1, 0x100087A8 # $t1 stores the top left pixel of the ltter
+	sw $t1, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push colour red into stack
+	jal drawR
+	
+	# fully coloured message stays on for 500ms
+	li $v0, 32 
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t1, 0x100087B8 # $t1 stores the top left pixel of the ltter
+	sw $t1, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push colour red into stack
+	jal drawOne
+	
+	# fully coloured message stays on for 500ms
+	li $v0, 32 
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t1, 0x100087C8 # $t1 stores the top left pixel of the ltter
+	sw $t1, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push colour red into stack
+	jal drawP
+	
+	sw $zero, score # reset score to zero
+	li $v0, 10 # exit program
+	syscall 
 
 drawP:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	addi $t4, $t4, 512
@@ -129,7 +166,7 @@ drawP:
 drawG:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	addi $t4, $t4, 128
@@ -162,7 +199,7 @@ drawG:
 drawE:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	addi $t4, $t4, 128
@@ -193,7 +230,7 @@ drawE:
 drawR:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	addi $t4, $t4, 512
@@ -212,7 +249,7 @@ drawR:
 drawW:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	sw $t3, 0($t4)
@@ -244,7 +281,7 @@ drawW:
 drawH:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	sw $t3, 0($t4)
@@ -276,7 +313,7 @@ drawH:
 drawA:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	addi $t4, $t4, 512
@@ -310,7 +347,7 @@ drawA:
 drawD:
 	lw $t3, 0($sp) # pop colour and store in $t3
 	addi $sp, $sp, 4 # decrease stack size 
-	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
 	addi $sp, $sp, 4 # decrease stack size
 	
 	addi $t4, $t4, 8
@@ -395,7 +432,7 @@ showPoggers:
 	sw $t1, 0($sp)
 	jal drawFive
 	
-	# fully coloured message stays on for 10ms
+	# fully coloured message stays on for 200ms
 	li $v0, 32 
 	li $a0, 200
 	syscall
@@ -482,7 +519,7 @@ showWow:
 	sw $t1, 0($sp)
 	jal drawW
 	
-	# fully coloured message stays on for 10ms
+	# fully coloured message stays on for 200ms
 	li $v0, 32 
 	li $a0, 200
 	syscall
@@ -555,7 +592,7 @@ show5Head:
 	sw $t1, 0($sp)
 	jal drawD
 	
-	# fully coloured message stays on for 10ms
+	# fully coloured message stays on for 200ms
 	li $v0, 32 
 	li $a0, 200
 	syscall
