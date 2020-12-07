@@ -35,8 +35,11 @@
 	displayAddress: .word 0x10008000 # display base address
 	arraySize: .word 4096 # bitmap display array size
 	platformLength: .word 28 # length of a platform
-	maxJumpHeight: .word 15 # maximum height of a single jump
+	maxJumpHeight: .word 14 # maximum height of a single jump
 	newPlatformsRow: .word 0x10008480 # row which triggers platform change on contact
+	minimumHeightForPoint: .word 0x10008B80 # lowest row for a platform hit to count as a point (row 25)
+	score: .word 0 # player game score
+	backgroundColour: .word 0xffffff # background colour of game screen
 	
 	platform1Row: .word 0x10008600# platform 1 starts on row 12
 	platform2Row: .word 0x10008B00 # platform 2 starts on row 22
@@ -45,11 +48,13 @@
 	white: .word 0xffffff # white
 	green: .word 0x00ff00 # green
 	yellow: .word 0xf3ff3d # yellow
-	black: .word 0x000000 # black
+	black: .word 0x000000 # black 
+	blue: .word 0x0472FE # blue
 .text
 
 main:
 	mainLoopInit:
+		jal drawScoreboard
 		jal drawBackground
 		jal drawPlatforms
 		
@@ -60,7 +65,12 @@ main:
 		move $s4, $zero # $s4 stores the jump/fall counter
 		
 		jal drawPlayer
+		
+		sw $zero, score # reset score to zero
+		
 	mainLoop:
+		jal undrawScoreboard
+		jal drawScoreboard
 		jal keyboardInput
 		jal drawPlayer
 		jal checkCollisions
@@ -74,7 +84,657 @@ main:
 	mainLoopDone:
 		li $v0, 10 # exit program
 		syscall 
+
+# erase previous scoreboard display
+drawBlank:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 256
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto undrawScoreboard
+
+undrawScoreboard:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of drawScoreboard into stack
+
+	li $t0, 0x100080C0 # $t0 stores the top left pixel of 1000's digit
+	lw $t1, backgroundColour # $t1 stores the background colour
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push location of top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	sw $t1, 0($sp) # push background colour into stack
+	
+	jal drawBlank # colour digit background colour (erase)
+	
+	li $t0, 0x100080D0 # $t0 stores the top left pixel of 100's digit
+	lw $t1, backgroundColour # $t1 stores the background colour
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push location of top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	sw $t1, 0($sp) # push background colour into stack
+	
+	jal drawBlank
+	
+	li $t0, 0x100080E0 # $t0 stores the top left pixel of 10's digit
+	lw $t1, backgroundColour # $t1 stores the background colour
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push location of top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	sw $t1, 0($sp) # push background colour into stack
+	
+	jal drawBlank
+	
+	li $t0, 0x100080F0 # $t0 stores the top left pixel of 1's digit
+	lw $t1, backgroundColour # $t1 stores the background colour
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push location of top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	sw $t1, 0($sp) # push background colour into stack
+	
+	jal drawBlank
+	
+	lw $t0, 0($sp) # pop return address of undrawScoreboard
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t0 # jump back to main
+	
+# draw a digit
+drawZero:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	# draw digit
+	sw $t5, 0($t6) 
+	sw $t5, 4($t6)
+	sw $t5, 8($t6)
+	addi $t6, $t6, 8
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	
+	jr $ra # jump back to drawDigit
+	
+drawOne:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawTwo:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4 
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128 
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128 
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4 
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawThree:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128 
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128 
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4 
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -256 
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4 
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawFour:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	addi $t6, $t6, -128
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128 
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128 
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128 
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawFive:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	addi $t6, $t6, 8
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4 
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawSix:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawSeven:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawEight:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawNine:
+	lw $t5, 0($sp) # pop colour and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop location of left pixel and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 	
+	
+	addi $t6, $t6, 256
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -4
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, -128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 4
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	addi $t6, $t6, 128
+	sw $t5, 0($t6)
+	
+	jr $ra # jump backto drawDigit
+
+drawDigit:
+	lw $t5, 0($sp) # pop location of top left pixel and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t6, 0($sp) # pop digit colour and store in $t6
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t7, 0($sp) # pop digit value and store in $t7 
+	addi $sp, $sp, 4 # decrease stack size
+	addi $sp, $sp, -4 # increase stack size 
+	sw $ra, 0($sp) # push return address of drawDigit
+	
+	# draw desired digit
+	drawZeroIf:
+		beq $t7, $zero, drawZeroElse # if digit is 0, draw it
+	drawZeroThen:
+		j drawZeroDone
+	drawZeroElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
 		
+		jal drawZero # draw digit 0
+		j drawNineDone
+	drawZeroDone:
+	
+	drawOneIf:
+		li $t8, 1 
+		beq $t7, $t8, drawOneElse	
+	drawOneThen:
+		j drawOneDone
+	drawOneElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawOne
+		j drawNineDone
+	drawOneDone:
+	
+	drawTwoIf:
+		li $t8, 2
+		beq $t7, $t8, drawTwoElse
+	drawTwoThen:
+		j drawTwoDone
+	drawTwoElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawTwo
+		j drawNineDone
+	drawTwoDone:
+	
+	drawThreeIf:
+		li $t8, 3
+		beq $t7, $t8, drawThreeElse
+	drawThreeThen:
+		j drawThreeDone
+	drawThreeElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawThree
+		j drawNineDone
+	drawThreeDone:
+		
+	drawFourIf:
+		li $t8, 4
+		beq $t7, $t8, drawFourElse
+	drawFourThen:
+		j drawFourDone
+	drawFourElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawFour
+		j drawNineDone
+	drawFourDone:
+	
+	drawFiveIf:
+		li $t8, 5
+		beq $t7, $t8, drawFiveElse
+	drawFiveThen:
+		j drawFiveDone
+	drawFiveElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawFive
+		j drawNineDone
+	drawFiveDone:
+		
+	drawSixIf:
+		li $t8, 6
+		beq $t7, $t8, drawSixElse
+	drawSixThen:
+		j drawSixDone
+	drawSixElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawSix
+		j drawNineDone
+	drawSixDone:	
+	
+	
+	drawSevenIf:
+		li $t8, 7
+		beq $t7, $t8, drawSevenElse
+	drawSevenThen:
+		j drawSevenDone
+	drawSevenElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawSeven 
+		j drawNineDone
+	drawSevenDone:
+	
+	drawEightIf:
+		li $t8, 8
+		beq $t7, $t8, drawEightElse
+	drawEightThen:
+		j drawEightDone
+	drawEightElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawEight 
+		j drawNineDone
+	drawEightDone:
+	
+	drawNineIf:
+		li $t8, 9
+		beq $t7, $t8, drawNineElse
+	drawNineThen:
+		j drawNineDone
+	drawNineElse:
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t5, 0($sp) # push location of top left pixel
+		addi $sp, $sp, -4 # increase stack size 
+		sw $t6, 0($sp) # push colour
+		
+		jal drawNine
+		j drawNineDone
+	drawNineDone:
+	
+	lw $t5, 0($sp) # pop return address of drawDigit
+	jr $t5 # jump back to drawDigits
+	
+# draw scoreboard digits
+drawDigits:
+	lw $t1, 0($sp) # pop 1000's digit
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t2, 0($sp) # pop 100's digit
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t3, 0($sp) # pop 10's digit 
+	addi $sp, $sp, 4 # decrease stack size
+	lw $t4, 0($sp) # pop 1's digit 
+	addi $sp, $sp, 4 # decrease stack size
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of drawDigits into stack
+	
+	
+	addi $sp, $sp, -4 # increase stack size 
+	sw $t1, 0($sp) # push 1000's digit into stack 
+	lw $t5, blue # $t5 stores the colour blue
+	addi $sp, $sp, -4 # increase stack size 
+	sw $t5, 0($sp) # push colour blue into stack
+	li $t6, 0x100080C0 # $t6 stores top left pixel of 1000's digit 
+	addi $sp, $sp, -4 # increase stack size 
+	sw $t6, 0($sp) # push location of top left pixel
+	jal drawDigit 
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t2, 0($sp) # push 100's digit into stack
+	lw $t5, blue # $t5 stores the colour blue
+	addi $sp, $sp, -4 # increase stack size 
+	sw $t5, 0($sp) # push colour blue into stack
+	li $t6, 0x100080D0 # $t6 stores top left pixel of 100's digit
+	addi $sp, $sp, -4 # increase stack size
+	sw $t6, 0($sp) # push location of top lect pixel
+	jal drawDigit
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t3, 0($sp) # push 10's digit into stack
+	lw $t5, blue # $t5 stores the colour blue
+	addi $sp, $sp, -4 # increase stack size
+	sw $t5, 0($sp) # push colour blue into stack
+	li $t6, 0x100080E0 # $t6 stores top left pixel of 10's digit
+	addi $sp, $sp, -4 # increase stack size
+	sw $t6, 0($sp) # push location of top lect pixel
+	jal drawDigit
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t4, 0($sp) # push 1's digit into stack
+	lw $t5, blue # $t5 stores the colour blue
+	addi $sp, $sp, -4 # increase stack size
+	sw $t5, 0($sp) # push colour blue into stack
+	li $t6, 0x100080F0 # $t6 stores top left pixel of 1's digit
+	addi $sp, $sp, -4 # increase stack size
+	sw $t6, 0($sp) # push location of top lect pixel
+	jal drawDigit
+	
+	lw $t0, 0($sp) # pop return address of drawDigits 
+	addi $sp, $sp, 4 # increase stack size	
+	
+	jr $t0 # jump back to drawScoreboard
+
+# display and update scoreboard
+drawScoreboard:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of drawScoreboard into stack
+	
+	lw $t0, score # $t0 stores player 1 score 
+	
+	# end game if score somehow exceeds 9999
+	scoreTooHighIf:
+		li $t1, 10000 # $t1 stores maximum score
+		bge $t0, $t1, scoreTooHighElse
+	scoreTooHighThen:
+		j scoreTooHighDone	
+	scoreTooHighElse:
+		lw $t0, 0($sp) # pop return address of drawScoreboard and store it in $t6
+		addi $sp, $sp, 4 # decrease stack size
+		
+		j mainLoopDone # end game
+	scoreTooHighDone:
+	
+	li $t1, 1000 # $t1 stores 1000
+	div $t0, $t1 
+	mflo $t3 # $t3 stores 1000's digit
+	mfhi $t2 # $t2 stores score mod 1000
+	
+	li $t1, 100 # $t1 stores 100
+	div $t2, $t1 
+	mflo $t4 # $t4 stores 100's digit
+	mfhi $t2 # $t2 stores (score mod 1000) mod 100
+		
+	li $t1, 10 # $t1 stores 10
+	div $t2, $t1 
+	mflo $t5 # $t5 stores 10's digit
+	mfhi $t6 # t6 stores 1's digit
+	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t6, 0($sp) # push 1's digit into stack
+	addi $sp, $sp, -4 # increase stack size
+	sw $t5, 0($sp) # push 10's digit into stack
+	addi $sp, $sp, -4 # increase stack size
+	sw $t4, 0($sp) # push 100's digit into stack
+	addi $sp, $sp, -4 # increase stack size
+	sw $t3, 0($sp) # push 1000's digit into stack
+	
+	jal drawDigits
+	
+	
+	lw $t0, 0($sp) # pop return address of drawScoreboard and store it in $t6
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t0 # jump back to main
+				
 # change platforms if player too high in-game
 changePlatforms:
 	addi $sp, $sp, -4 # increase stack size
@@ -356,6 +1016,7 @@ checkCollisions:
 		jal jumpUp # jump up or fall down depending on energy
 		j startJumpingUpDone
 	startJumpingUpElse:
+	
 		# don't reset player energy if player just came from below block
 		startJumpingUp2If:
 			lw $t3, maxJumpHeight
@@ -364,6 +1025,17 @@ checkCollisions:
 			jal jumpUp # player jumps up	
 			j startJumpingUp2Done 
 		startJumpingUp2Else:
+			gainPointIf:
+				addi $t1, $s0, 128 # t1 stores the location of the block right under the player
+				lw $t4, minimumHeightForPoint # $t4 holds min height for platform landing to count as a point
+				ble $t1, $t4, gainPointElse # if platform block below doodler <= min. height for point score +1
+			gainPointThen:
+				j gainPointDone
+			gainPointElse:
+				lw $t5, score # add 1 to the score
+				addi $t5, $t5, 1 
+				sw $t5, score
+			gainPointDone:
 			li $s4, 0 # reset jump counter i.e. player energy
 			jal jumpUp # player jumps up
 		startJumpingUp2Done:
@@ -435,9 +1107,9 @@ drawPlayer:
 	addi $sp, $sp, -4 # increase stack size
 	sw $ra, 0($sp) # push return address of drawPlayer into stack
 	
-	lw $t0, black # $t1 stores the black colour
-	sw $t0, 0($s0) # color the player character black (body)
-	move $t1, $s0 # color the player character black (head) 
+	lw $t0, blue # $t1 stores the black colour
+	sw $t0, 0($s0) # color the player character blue (body)
+	move $t1, $s0 # color the player character blue (head) 
 	addi $t1, $t1, -128
 	sw $t0, 0($t1) 
 	
