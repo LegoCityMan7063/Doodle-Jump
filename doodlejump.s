@@ -35,6 +35,7 @@
 	displayAddress: .word 0x10008000 # display base address
 	arraySize: .word 4096 # bitmap display array size
 	platformLength: .word 28 # length of a platform
+	newPlatformLength: .word 28 # length of new platforms
 	maxJumpHeight: .word 14 # maximum height of a single jump
 	newPlatformsRow: .word 0x10008480 # row which triggers platform change on contact
 	minimumHeightForPoint: .word 0x10008B80 # lowest row for a platform hit to count as a point (row 25)
@@ -50,12 +51,20 @@
 	yellow: .word 0xf3ff3d # yellow
 	black: .word 0x000000 # black 
 	blue: .word 0x0472FE # blue
+	greyLevel1: .word 0xDADADA # grey
+	greyLevel2: .word 0xCDCDCD# grey
+	greyLevel3: .word 0xAFAFAF # grey
+	greyLevel4: .word 0x9C9C9C # grey
+	greyLevel5: .word 0x7D7C7C # grey
+	greyLevel6: .word 0x5B5B5B # grey
+	greyLevel7: .word 0x343434 # grey
+	greyLevel8: .word 0x282828 # grey
 .text
 
 main:
 	mainLoopInit:
+		jal drawBackgroundInitial
 		jal drawScoreboard
-		jal drawBackground
 		jal drawPlatforms
 		
 		move $s0, $s3 # calculate initial position of player character
@@ -66,15 +75,15 @@ main:
 		
 		jal drawPlayer
 		
-		sw $zero, score # reset score to zero
-		
 	mainLoop:
+		jal drawBackground
 		jal undrawScoreboard
 		jal drawScoreboard
 		jal keyboardInput
 		jal drawPlayer
 		jal checkCollisions
 		jal changePlatforms
+		jal changeDifficulty
 						
 		li $v0, 32 # sleep for 100 ms
 		li $a0, 100
@@ -82,9 +91,117 @@ main:
 		
 		j mainLoop # jump back to start of main loop
 	mainLoopDone:
+		sw $zero, score # reset score to zero
 		li $v0, 10 # exit program
 		syscall 
 
+# change difficulty as score increases
+changeDifficulty:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of drawScoreboard into stack
+	
+	lw $t0, score # $t0 stores the current game score
+	
+	# change background colour (darker i.e. darker sky as altitude increases) every level
+	# decrease platform length by 2 every 2 levels (up to min. 2 block platform length)
+		li $t1, 80 # $t1 stores the score needed to increase the game level
+	level8If:
+		bge $t0, $t1, level8Else # level 7 70 <= x <= 80
+	level8Then:
+		j level8Done
+	level8Else:
+		lw $t1, greyLevel8
+		sw $t1, backgroundColour
+		j level1Done
+	level8Done:
+	
+	li $t1, 70 # $t1 stores the score needed to increase the game level
+	level7If:
+		bge $t0, $t1, level7Else # level 7 70 <= x <= 80
+	level7Then:
+		j level7Done
+	level7Else:
+		lw $t1, greyLevel7
+		sw $t1, backgroundColour
+		j level1Done
+	level7Done:
+	
+	li $t1, 60 # $t1 stores the score needed to increase the game level
+	level6If:
+		bge $t0, $t1, level6Else # level 6 60 <= x <= 70
+	level6Then:
+		j level6Done
+	level6Else:
+		lw $t1, greyLevel6
+		sw $t1, backgroundColour
+		li $t1, 8
+		sw $t1, newPlatformLength
+		j level1Done
+	level6Done:
+	
+	li $t1, 50 # $t1 stores the score needed to increase the game level
+	level5If:
+		bge $t0, $t1, level5Else # level 5 50 <= x <= 60
+	level5Then:
+		j level5Done
+	level5Else:
+		lw $t1, greyLevel5
+		sw $t1, backgroundColour
+		j level1Done
+	level5Done:
+	
+	li $t1, 40 # $t1 stores the score needed to increase the game level
+	level4If:
+		bge $t0, $t1, level4Else # level 4 40 <= x <= 50
+	level4Then:
+		j level4Done
+	level4Else:
+		lw $t1, greyLevel4
+		sw $t1, backgroundColour
+		li $t1, 16
+		sw $t1, newPlatformLength
+		j level1Done
+	level4Done:
+	
+	li $t1, 30 # $t1 stores the score needed to increase the game level
+	level3If:
+		bge $t0, $t1, level3Else # level 3 30 <= x < 40
+	level3Then:
+		j level3Done
+	level3Else:
+		lw $t1, greyLevel3
+		sw $t1, backgroundColour
+		j level1Done
+	level3Done:
+	
+	li $t1, 20 # $t1 stores the score needed to increase the game level
+	level2If:
+		bge $t0, $t1, level2Else # level 2 20 <= x < 30
+	leve21Then:
+		j level2Done
+	level2Else:
+		lw $t1, greyLevel2
+		sw $t1, backgroundColour
+		li $t1, 20
+		sw $t1, newPlatformLength
+		j level1Done
+	level2Done:
+	
+	li $t1, 10 # $t1 stores the score needed to increase the game level
+	level1If:
+		bge $t0, $t1, level1Else # level 1 10 <= x < 20
+	level1Then:
+		j level1Done
+	level1Else:
+		lw $t1, greyLevel1
+		sw $t1, backgroundColour
+	level1Done:
+		
+	
+	lw $t0, 0($sp) # pop return address of undrawScoreboard
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t0 # jump back to main
 # erase previous scoreboard display
 drawBlank:
 	lw $t5, 0($sp) # pop colour and store in $t5
@@ -931,9 +1048,9 @@ undrawPlatform:
 	undrawPlatformLoopInit:
 		lw $t7, platformLength # $t7 stores the last block of the platform
 		add $t7, $t7, $t6  
-		lw $t8, white # $t8 stores the colour white
+		lw $t8, backgroundColour # $t8 stores the background colour
 	undrawPlatformLoop:
-		sw $t8, 0($t6) # colour the unit white
+		sw $t8, 0($t6) # colour the unit background colour
 		addi $t6, $t6, 4 # go to unit on the right, each colour is 4 bytes
 		bne $t6, $t7, undrawPlatformLoop # loop until platform entirely erased
 	undrawPlatformLoopDone:
@@ -1052,7 +1169,7 @@ undrawPlayer:
 	sw $ra, 0($sp) # push return addr5ess of undrawPlayer into stack
 	
 	move $t8, $s0
-	lw $t9, white # $t9 stores the colour white
+	lw $t9, backgroundColour # $t9 stores the backgroundColour
 	sw $t9, 0($t8) # colour the player body white
 	addi $t8, $t8, -128 # colour the player head white
 	sw $t9, 0($t8)
@@ -1167,7 +1284,8 @@ drawPlatform1:
 	addi $sp, $sp, -4 # increase stack size
 	sw $ra, 0($sp) # push return address of drawPlatform1 into stack
 	
-	lw $t0, platformLength # $t0 stores the length of the platform
+	lw $t0, newPlatformLength # $t0 stores the length of the platform
+	sw $t0, platformLength # update platform length to new value
 	lw $t1, green # $t1 stores the green colour
 	lw $t2, platform1Row # $t2 stores the address of the first display unit on platform 1's row
 	
@@ -1197,7 +1315,8 @@ drawPlatform2:
 	addi $sp, $sp, -4 # increase stack size
 	sw $ra, 0($sp) # push return address of drawPlatform2 into stack
 	
-	lw $t0, platformLength # $t0 stores the length of the platform
+	lw $t0, newPlatformLength # $t0 stores the length of the platform
+	sw $t0, platformLength # update platform length to new value
 	lw $t1, green # $t1 stores the green colour
 	lw $t2, platform2Row # $t2 stores the address of the first display unit on platform 2's row
 	
@@ -1228,7 +1347,8 @@ drawPlatform3:
 	addi $sp, $sp, -4 # increase stack size
 	sw $ra, 0($sp) # push return address of drawPlatform3 into stack
 	
-	lw $t0, platformLength # $t0 stores the length of the platform
+	lw $t0, newPlatformLength # $t0 stores the length of the platform
+	sw $t0, platformLength # update platform length to new value
 	lw $t1, green # $t1 stores the green colour
 	lw $t2, platform3Row # $t2 stores the address of the first display unit on platform 3's row
 	
@@ -1255,8 +1375,7 @@ drawPlatform3:
 	
 	jr $t5 # return to drawPlatforms
 
-
-# colour the background white
+# colour the background white (in loop)
 drawBackground:
 	addi $sp, $sp, -4 # increase stack size
 	sw $ra, 0($sp) # push return address of drawBackground into stack 
@@ -1265,14 +1384,80 @@ drawBackground:
 		add $t0, $zero, $zero # $t0 stores the offset (starting at 0)
 		lw $t1, arraySize # $t1 stores the array size
 		lw $t2, displayAddress # $t2 stores the base address for the display
-		lw $t3, white # $t3 stores the colour code for white
+		lw $t3, backgroundColour # $t3 stores the background colour
 		add $t4, $t2, $t0 # $t4 stores the index 
 	backgroundLoop:
-		sw $t3, 0($t4) # color the unit white
-		addi $t0, $t0, 4 # increase the offset by 4 (each color is 4 bytes)
-		add $t4, $t2, $t0 # $t4 stores the next index
-		bne $t0, $t1, backgroundLoop # if index < 4096, loop again
+		skipPlatformIf:
+			lw $t6, 0($t4) # $t6 stores the colour of the block
+			beq $t6, $t3, skipPlatformElse # if block not green (platform) paint background colour
+		skipPlatformThen:
+			addi $t0, $t0, 4 # increase the offset by 4 (each color is 4 bytes)
+			add $t4, $t2, $t0 # $t4 stores the next index
+			backgroundLoopEndIf:
+				bne $t0, $t1, backgroundLoopEndElse # if index < 4096, loop again
+			backgroundLoopEndThen:
+				j backgroundLoopDone
+			backgroundLoopEndElse:
+				j backgroundLoop
+			backgroundLoopEndDone:
+		skipPlatformElse:
+			sw $t3, 0($t4) # color the unit white
+			addi $t0, $t0, 4 # increase the offset by 4 (each color is 4 bytes)
+			add $t4, $t2, $t0 # $t4 stores the next index
+			backgroundLoopEnd2If:
+				bne $t0, $t1, backgroundLoopEnd2Else # if index < 4096, loop again
+			backgroundLoopEnd2Then:
+				j backgroundLoopDone
+			backgroundLoopEnd2Else:
+				j backgroundLoop
+			backgroundLoopEnd2Done:
+		skipPlatformDone:	
 	backgroundLoopDone:
+	
+	lw $t5, 0($sp) # # pop return address of drawPlatform1 and store in $t5
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t5 # return to main
+
+# colour the background white initially
+drawBackgroundInitial:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of drawBackground into stack 
+	
+	backgroundInitialLoopInit:
+		add $t0, $zero, $zero # $t0 stores the offset (starting at 0)
+		lw $t1, arraySize # $t1 stores the array size
+		lw $t2, displayAddress # $t2 stores the base address for the display
+		lw $t3, backgroundColour # $t3 stores the colour code for white
+		add $t4, $t2, $t0 # $t4 stores the index 
+	backgroundInitialLoop:
+		skipPlatformInitialIf:
+			lw $t6, 0($t4) # $t6 stores the colour of the block
+			lw $t7, green # $t7 stores the colour green
+			bne $t6, $t7, skipPlatformInitialElse # if block not green (platform) paint background colour
+		skipPlatformInitialThen:
+			addi $t0, $t0, 4 # increase the offset by 4 (each color is 4 bytes)
+			add $t4, $t2, $t0 # $t4 stores the next index
+			backgroundLoopInitialEndIf:
+				bne $t0, $t1, backgroundLoopInitialEndElse # if index < 4096, loop again
+			backgroundLoopInitialEndThen:
+				j backgroundLoopInitialDone
+			backgroundLoopInitialEndElse:
+				j backgroundInitialLoop
+			backgroundLoopInitialEndDone:
+		skipPlatformInitialElse:
+			sw $t3, 0($t4) # color the unit white
+			addi $t0, $t0, 4 # increase the offset by 4 (each color is 4 bytes)
+			add $t4, $t2, $t0 # $t4 stores the next index
+			backgroundLoopInitialEnd2If:
+				bne $t0, $t1, backgroundLoopInitialEnd2Else # if index < 4096, loop again
+			backgroundLoopInitialEnd2Then:
+				j backgroundLoopInitialDone
+			backgroundLoopInitialEnd2Else:
+				j backgroundInitialLoop
+			backgroundLoopInitialEnd2Done:
+		skipPlatformInitialDone:	
+	backgroundLoopInitialDone:
 	
 	lw $t5, 0($sp) # # pop return address of drawPlatform1 and store in $t5
 	addi $sp, $sp, 4 # decrease stack size
