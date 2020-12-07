@@ -65,6 +65,8 @@
 .text
 
 main:
+	jal startScreen
+	
 	mainLoopInit:
 		jal drawBackgroundInitial
 		jal drawScoreboard
@@ -96,6 +98,252 @@ main:
 	mainLoopDone:
 		jal gameOver
 
+startScreen:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of drawPlayer into stack
+	
+	jal drawBackgroundInitial # draw start screen background
+	
+	# draw "Doodle Jump"
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x10008284
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawD
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x10008294
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawZero
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x100082A4
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawZero
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x100082B4
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawD
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x100082C4
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawOne
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x100082D4
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawE
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x10008584
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawJ
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x10008594
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawU
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x100085A4
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawM
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size
+	li $t0, 0x100085B4
+	sw $t0, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t1, black
+	sw $t1, 0($sp) # push colour 
+	jal drawP
+	
+	li $v0, 32 # sleep for 500 ms
+	li $a0, 500
+	syscall
+	
+	
+	# press p to play game
+	sw $zero, 0xffff0004
+	startLoopInit:
+		lw $t1, 0xffff0004
+	startLoop:				
+		addi $sp, $sp, -4 # increase stack size
+		# li $t1, 0x100087B8 # $t1 stores the top left pixel of the letter
+		li $t1, 0x10008AB8 # $t1 stores the top left pixel of the letter
+		sw $t1, 0($sp) # push top left pixel
+		addi $sp, $sp, -4 # increase stack size
+		lw $t0, green # $t0 stores black
+		sw $t0, 0($sp) # push colour into stack
+		jal drawP						
+					
+		lw $t1, 0xffff0004
+		bne $t1, 0x070, startLoop # wait until player presses p
+	startLoopDone:
+	
+	addi $sp, $sp, -4 # increase stack size
+	# li $t1, 0x100087B8 # $t1 stores the top left pixel of the letter
+	li $t1, 0x10008AB8 # $t1 stores the top left pixel of the letter
+	sw $t1, 0($sp) # push top left pixel
+	addi $sp, $sp, -4 # increase stack size
+	lw $t0, white # $t0 stores black
+	sw $t0, 0($sp) # push colour into stack
+	jal drawP
+					
+	sw $zero, 0xffff0004
+	
+	lw $t0, 0($sp) # pop returh address of startScreen and store in $t0
+	addi $sp, $sp, 4 # decrease stack size
+		
+	jr $t0 # jump back to main	
+
+drawJ:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	addi $t4, $t4, 512
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+	
+drawU:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+drawM:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop location of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 8
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+	
 gameOver:
 	lw $t0, red # $t0 stores the colour red
 	
