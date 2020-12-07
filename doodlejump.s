@@ -35,12 +35,13 @@
 	displayAddress: .word 0x10008000 # display base address
 	arraySize: .word 4096 # bitmap display array size
 	platformLength: .word 28 # length of a platform
-	newPlatformLength: .word 28 # length of new platforms
+	newPlatformLength: .word 28 # length of new platforms (fragment platforms)
 	maxJumpHeight: .word 14 # maximum height of a single jump
 	newPlatformsRow: .word 0x10008480 # row which triggers platform change on contact
 	minimumHeightForPoint: .word 0x10008B80 # lowest row for a platform hit to count as a point (row 25)
 	score: .word 0 # player game score
 	backgroundColour: .word 0xffffff # background colour of game screen
+	notificationColour: .word 0xF3A72B
 	
 	platform1Row: .word 0x10008600# platform 1 starts on row 12
 	platform2Row: .word 0x10008B00 # platform 2 starts on row 22
@@ -59,6 +60,7 @@
 	greyLevel6: .word 0x5B5B5B # grey
 	greyLevel7: .word 0x343434 # grey
 	greyLevel8: .word 0x282828 # grey
+	orange: .word 0xF3A72B# orange
 .text
 
 main:
@@ -95,10 +97,578 @@ main:
 		li $v0, 10 # exit program
 		syscall 
 
+drawP:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	addi $t4, $t4, 512
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+drawG:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 256
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t5, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+drawE:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 256
+	sw $t3, 0($t4)
+	addi $t4, $t4, 256
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)	
+	
+	jr $ra # jump back
+
+drawR:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	addi $t4, $t4, 512
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+drawW:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+drawH:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	addi $t4, $t4, -256
+	sw $t3, 0($t4)
+	addi $t4, $t4, 256
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+drawA:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	addi $t4, $t4, 512
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -256
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+drawD:
+	lw $t3, 0($sp) # pop colour and store in $t3
+	addi $sp, $sp, 4 # decrease stack size 
+	lw $t4, 0($sp) # pop loation of left pixel and store in $t4
+	addi $sp, $sp, 4 # decrease stack size
+	
+	addi $t4, $t4, 8
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -4
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, -128
+	sw $t3, 0($t4)
+	addi $t4, $t4, 4
+	sw $t3, 0($t4)
+	
+	jr $ra # jump back
+
+
+# show congratulatory message every 10th point
+showPoggers:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of showPoggers into stack
+	
+	lw $t0, backgroundColour # $t0 stores the background colour
+	lw $t1, notificationColour # $t1 stores the notification colour
+	
+
+	addi $sp, $sp, -4 # increase stack size 
+	li $t2, 0x10008384 # push top left pixel of letter into stack
+	sw $t2, 0($sp) 
+	addi $sp, $sp, -4 # increase stack size
+	sw $t1, 0($sp) # push notification colour into stack
+	jal drawP 
+
+	addi $sp, $sp, -4
+	li $t2, 0x10008394 	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawZero
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083A4
+	sw $t2, 0($sp)	
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawG
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083B4	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawG
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083C4	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawE
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083D4	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawR
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083E4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawFive
+	
+	# fully coloured message stays on for 10ms
+	li $v0, 32 
+	li $a0, 200
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size 
+	li $t2, 0x10008384 # push top left pixel of letter into stack	
+	sw $t2, 0($sp) 
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push notification colour into stack
+	jal drawP 
+
+	addi $sp, $sp, -4
+	li $t2, 0x10008394 	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawZero
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083A4	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawG
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083B4	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawG
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083C4	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawE
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083D4
+	sw $t2, 0($sp)	
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawR
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083E4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawFive
+	
+	lw $t0, 0($sp) # pop return address of showPoggers
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t0 # jump back to showNotifications
+	
+showWow:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of showWow into stack
+	
+	lw $t0, backgroundColour # $t0 stores the background colour
+	lw $t1, notificationColour # $t1 stores the notification colour
+	
+	addi $sp, $sp, -4 # increase stack size 
+	li $t2, 0x10008384 # push top left pixel of letter into stack
+	sw $t2, 0($sp) 
+	addi $sp, $sp, -4 # increase stack size
+	sw $t1, 0($sp) # push notification colour into stack
+	jal drawW
+
+	addi $sp, $sp, -4
+	li $t2, 0x10008394 
+	sw $t2, 0($sp)	
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawZero
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083A4	
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawW
+	
+	# fully coloured message stays on for 10ms
+	li $v0, 32 
+	li $a0, 200
+	syscall
+
+	addi $sp, $sp, -4 # increase stack size 
+	li $t2, 0x10008384 # push top left pixel of letter into stack
+	sw $t2, 0($sp) 
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push notification colour into stack
+	jal drawW
+	
+	addi $sp, $sp, -4
+	li $t2, 0x10008394 
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawZero
+	
+	addi $sp, $sp, -4
+	li $t2, 0x100083A4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawW	
+	
+	lw $t0, 0($sp) # pop return address of showWow
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t0 # jump back to showNotifications
+	
+show5Head:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of show5Head into stack
+	
+	lw $t0, backgroundColour # $t0 stores the background colour
+	lw $t1, notificationColour # $t1 stores the notification colour
+
+	addi $sp, $sp, -4 # increase stack size 
+	li $t2, 0x10008384 # push top left pixel of letter into stack
+	sw $t2, 0($sp) 	
+	addi $sp, $sp, -4 # increase stack size
+	sw $t1, 0($sp) # push notification colour into stack
+	jal drawFive 
+
+	addi $sp, $sp, -4
+	li $t2, 0x10008394 
+	sw $t2, 0($sp)	
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawH
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083A4
+	sw $t2, 0($sp)	
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawE
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083B4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawA
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083C4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t1, 0($sp)
+	jal drawD
+	
+	# fully coloured message stays on for 10ms
+	li $v0, 32 
+	li $a0, 200
+	syscall
+	
+	addi $sp, $sp, -4 # increase stack size 
+	li $t2, 0x10008384 # push top left pixel of letter into stack
+	sw $t2, 0($sp) 
+	addi $sp, $sp, -4 # increase stack size
+	sw $t0, 0($sp) # push notification colour into stack
+	jal drawFive 
+
+	addi $sp, $sp, -4
+	li $t2, 0x10008394 
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawH
+	
+	addi $sp, $sp, -4
+	li $t2, 0x100083A4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawE
+
+	addi $sp, $sp, -4
+	li $t2, 0x100083B4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawA
+	
+	addi $sp, $sp, -4
+	li $t2, 0x100083C4
+	sw $t2, 0($sp)
+	addi $sp, $sp, -4 
+	sw $t0, 0($sp)
+	jal drawD	
+	
+	lw $t0, 0($sp) # pop return address of show5Head
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t0 # jump back to showNotifications
+	
+
+showNotification:
+	addi $sp, $sp, -4 # increase stack size
+	sw $ra, 0($sp) # push return address of showNotification into stack
+	
+	noNotifZeroIf:
+		lw $t0, score # $t0 stores the current game score
+		beq $t0, $zero, noNotifZeroElse # if score is 0, don't show notification
+	noNotifZeroThen:
+		j noNotifZeroDone
+	noNotifZeroElse:
+		j showNotificationDone
+	noNotifZeroDone:
+			
+	
+	showNotificationIf:
+		lw $t0, score # $t0 stores the current game score
+		li $t1, 10 # $t1 stores the number 10
+		div $t0, $t1 # score / 10
+		mfhi $t0 # $t0 stores score % 10
+		beq  $t0, $zero, showNotificationElse # if score is muiltiple of 10, print message
+	showNotificationThen:
+		j showNotificationDone
+	showNotificationElse:	
+		# random number to decide what message to show
+		li $v0, 42
+		li $a0, 0
+		li $a1, 3
+		syscall
+		
+		showPoggersIf:
+			li $t2, 0 # $t2 stores the ID for POGGERS
+			beq $a0, $t2, showPoggersElse # if id == 0 show POGGERS
+		showPoggersThen:
+			j showPoggersDone
+		showPoggersElse:
+			jal showPoggers
+			j show5HeadDone
+		showPoggersDone:
+	
+		showWowIf:
+			li $t2, 1 # $t2 stores the ID for WOW
+			beq $a0, $t2, showWowElse # if id == 1 show WOW
+		showWowThen:
+			j showWowDone
+		showWowElse:
+			jal showWow
+			j show5HeadDone
+		showWowDone:
+	
+		show5HeadIf:
+			li $t2, 2 # $t3 stores the ID for 5HEAD
+			beq $a0, $t2, show5HeadElse # if id == 2 show 5HEAD
+		show5HeadThen:
+			j show5HeadDone
+		show5HeadElse:
+			jal show5Head
+		show5HeadDone:
+	showNotificationDone:
+	
+	lw $t0, 0($sp) # pop return address of showNotification
+	addi $sp, $sp, 4 # decrease stack size
+	
+	jr $t0 # jump back to main
+
 # change difficulty as score increases
 changeDifficulty:
 	addi $sp, $sp, -4 # increase stack size
-	sw $ra, 0($sp) # push return address of drawScoreboard into stack
+	sw $ra, 0($sp) # push return address of changeDifficulty into stack
 	
 	lw $t0, score # $t0 stores the current game score
 	
@@ -198,7 +768,7 @@ changeDifficulty:
 	level1Done:
 		
 	
-	lw $t0, 0($sp) # pop return address of undrawScoreboard
+	lw $t0, 0($sp) # pop return address of changeDifficulty
 	addi $sp, $sp, 4 # decrease stack size
 	
 	jr $t0 # jump back to main
@@ -1152,6 +1722,7 @@ checkCollisions:
 				lw $t5, score # add 1 to the score
 				addi $t5, $t5, 1 
 				sw $t5, score
+				jal showNotification
 			gainPointDone:
 			li $s4, 0 # reset jump counter i.e. player energy
 			jal jumpUp # player jumps up
