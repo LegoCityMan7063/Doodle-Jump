@@ -15,16 +15,19 @@
 # Which milestone is reached in this submission?
 # (See the assignment handout for descriptions of the milestones)
 # - Milestone 1/2/3/4/5 (choose the one the applies)
+# Milestone 5
 #
 # Which approved additional features have been implemented?
 # (See the assignment handout for the list of additional features)
-# 1. (fill in the feature, if any)
-# 2. (fill in the feature, if any)
-# 3. (fill in the feature, if any)
+# 1. Scoreboard/score count
+# 2. Dynamic increase in difficulty
+# 3. More platform types
+# 4. Fancier graphics
+# 5. Dynamic on-screen notifications
 # ... (add more if necessary)
 #
 # Link to video demonstration for final submission:
-# - (insert YouTube / MyMedia / other URL here). 
+# -  https://youtu.be/Y1hzfqH4WzY
 #
 # Any additional information that the TA needs to know:
 # - (write here, if any)
@@ -2074,7 +2077,7 @@ keyboardInput:
 				li $t1, 0x100087B8 # $t1 stores the top left pixel of the letter
 				sw $t1, 0($sp) # push top left pixel
 				addi $sp, $sp, -4 # increase stack size
-				lw $t0, white # $t0 stores white
+				lw $t0, backgroundColour # $t0 stores backgroundColour
 				sw $t0, 0($sp) # push colour into stack
 				jal drawP
 					
